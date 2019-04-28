@@ -4,7 +4,7 @@
 
 **Description**
 
-A raindrop of initial mass m<sub>0</sub> starts falling from rest under the  combined action of gravity $W(t)  = m(t)g$ and air resistance $F_{air}(t) = -Cm^{\alpha}v^{\beta}$. While falling, its mass is changing at a rate: ${\frac{dm}{dt} = Bm(t)v(t)}$
+A raindrop of initial mass m<sub>0</sub> starts falling from rest under the  combined action of gravity ![](https://latex.codecogs.com/svg.latex?W(t)&space;=&space;m(t)g) and air resistance ![](https://latex.codecogs.com/svg.latex?$F_{air}(t)&space;=&space;-Cm^{\alpha}v^{\beta}$). While falling, its mass is changing at a rate: ![](https://latex.codecogs.com/svg.latex?{\frac{dm}{dt}&space;=&space;Bm(t)v(t)})
 
 
 **Project Tasks**
