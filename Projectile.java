@@ -6,68 +6,100 @@
  */
 
 package org.opensourcephysics.sip.ch03;
-import org.opensourcephysics.controls.*;
-import org.opensourcephysics.frames.*;
+import java.awt.*;
+import org.opensourcephysics.display.*;
+import org.opensourcephysics.numerics.*;
 
 /**
- * ProjectileApp solves and displays the time evolution of a projectile by stepping a projectile model.
+ * Projectile models the dynamics of a projectile and forms a template for other simulations.
  *
  * @author Wolfgang Christian, Jan Tobochnik, Harvey Gould
  * @version 1.0  05/16/05
  */
-public class ProjectileApp extends AbstractSimulation {
-  PlotFrame plotFrame = new PlotFrame("velocity", "mass", "Mass versus Velocity");
-  Projectile projectile = new Projectile();
+public class Projectile implements Drawable, ODE {
+  static final double g = 9.8;
+  final static double alpha = 0.8; // d1 = 8
+  final static double beta = 0.01; // d2 = 7
+  private double B = 1;
+  private double C = 1;
+  double[] state = new double[4]; // { h, B, m, C }
+  int pixRadius = 6;              // pixel radius for drawing of projectile
+  ODESolver odeSolver = new RK4(this);
 
-  public ProjectileApp() {
-    plotFrame.setXYColumnNames(0, "t", "x");
-    plotFrame.setXYColumnNames(1, "t", "y");
+  public void setStepSize(double dt) {
+    odeSolver.setStepSize(dt);
   }
 
   /**
-   * Initializes the simulation.
+   * Steps (advances) the time.
+   *
+   * @param dt the time step.
    */
-  public void initialize() {
-	// green line is for mass
-	// red line is for velocity
-    double dt = control.getDouble("dt");
-    double h = control.getDouble("initial height");
-    double B = control.getDouble("initial B");
-    double C = control.getDouble("initial C");
-    double m = control.getDouble("initial mass");
-    projectile.setState(h, 0, m);
-    projectile.setStepSize(dt);  
-    projectile.setB(B);
-    projectile.setC(C);
+  public void step() {
+    odeSolver.step(); // do one time step using selected algorithm
   }
 
   /**
-   * Does a time step.
+   * Sets the state.
+   *
+   * @param x
+   * @param vy
+   * @param m
+   * @param dm
    */
-  public void doStep() {
-    plotFrame.append(0, projectile.state[3], projectile.state[1]); // velocity vs time data added
-    plotFrame.append(1, projectile.state[3], projectile.state[2]); // mass vs time data added
-    projectile.step(); // advance the state by one time step
+  public void setState(double h, double b, double m) {
+    state[0] = h; // h
+    state[1] = b; // b
+    state[2] = m; // m
+    state[3] = 0; // time
   }
 
   /**
-   * Resets the simulation.
+   * Gets the state.  Required for ODE interface.
+   * @return double[] the state
    */
-  public void reset() {
-    control.setValue("initial height", 0);
-    control.setValue("initial B", 10);
-    control.setValue("initial C", 0);
-    control.setValue("initial mass", 10);
-    control.setValue("dt", 0.01);
-    enableStepsPerDisplay(true);
+  public double[] getState() {
+    return state;
   }
 
   /**
-   * Starts the Java application.
-   * @param args  command line parameters
+   * Gets the rate.  Required for ODE inteface
+   * @param state double[] the state
+   * @param rate double[]  the computed rate
    */
-  public static void main(String[] args) {
-    SimulationControl.createApp(new ProjectileApp());
+  public void getRate(double[] state, double[] rate) {
+    rate[0] = -state[1];                              // rate of change of height
+    rate[1] = g - C * Math.pow(state[2], alpha - 1)
+                    * Math.pow(state[1], beta) - B
+                    * Math.pow(state[1], 2);          // rate of change velocity
+    rate[2] = B * state[2] * state[1];                // rate of change of mass
+    rate[3] = 1;                                      // dt/dt = 1
+  }
+  
+  public void setB(double B) {
+	  this.B = B;
+  }
+  
+  public void setC(double C) {
+	  this.C = C;
+  }
+
+  /**
+   * Draws the projectile. Required for Drawable interface.
+   *
+   * @param drawingPanel
+   * @param g
+   */
+  public void draw(DrawingPanel drawingPanel, Graphics g) {
+    int xpix = drawingPanel.xToPix(state[0]);
+    int ypix = drawingPanel.yToPix(state[2]);
+    g.setColor(Color.red);
+    g.fillOval(xpix-pixRadius, ypix-pixRadius, 2*pixRadius, 2*pixRadius);
+    g.setColor(Color.green);
+    int xmin = drawingPanel.xToPix(-100);
+    int xmax = drawingPanel.xToPix(100);
+    int y0 = drawingPanel.yToPix(0);
+    g.drawLine(xmin, y0, xmax, y0); // draw a line to represent the ground
   }
 }
 
@@ -94,4 +126,3 @@ public class ProjectileApp extends AbstractSimulation {
  * Copyright (c) 2007  The Open Source Physics project
  *                     http://www.opensourcephysics.org
  */
-
